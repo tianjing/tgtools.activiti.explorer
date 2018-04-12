@@ -350,6 +350,36 @@ public class FlowService {
         //turnTransition(pTaskID, pBusinessKey, pUserID, endActivity.getId(), null);
     }
 
+    /**
+     * 删除流程
+     * @param p_BusinessKey
+     * @param p_UserID
+     * @throws APPErrorException
+     */
+    public void abortFlow(String p_BusinessKey, String p_UserID) throws APPErrorException {
+        //validStringParam("p_TaskID", p_TaskID);
+        validStringParam("p_BusinessKey", p_BusinessKey);
+        validStringParam("p_UserID", p_UserID);
+        //通过业务ID 获取 当前所有任务
+        List<Task> list = ProcessEngines.getDefaultProcessEngine().getTaskService().createTaskQuery().processInstanceBusinessKey(p_BusinessKey).list();
+        String processInstanceId = null;
+        TaskService taskService = ProcessEngines.getDefaultProcessEngine().getTaskService();
+        for (int i = 0; i < list.size(); i++) {
+            Task task = list.get(i);
+            task.setDescription("用户作废");
+            //保存任务信息
+            taskService.saveTask(task);
+            //签收任务
+            claimTask(task.getId(), p_UserID);
+        }
+        //删除流程实例
+        ProcessEngines.getDefaultProcessEngine().getRuntimeService().deleteProcessInstance(processInstanceId, "用户作废");
+        for (int i = 0; i < list.size(); i++) {
+            Task task = list.get(i);
+            //删除任务
+            taskService.deleteTask(task.getId(), "用户作废");
+        }
+    }
     //======================自由流开始========================================================
     private void turnTransition(String pTaskid, String pBusinessKey, String pUserID, String pActivityId,
                                 Map<String, Object> pVariables) throws APPErrorException {
