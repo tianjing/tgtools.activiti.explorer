@@ -366,11 +366,10 @@ public class FlowService {
         TaskService taskService = ProcessEngines.getDefaultProcessEngine().getTaskService();
         for (int i = 0; i < list.size(); i++) {
             Task task = list.get(i);
+            task.setAssignee(p_UserID);
             task.setDescription("用户作废");
             //保存任务信息
             taskService.saveTask(task);
-            //签收任务
-            claimTask(task.getId(), p_UserID);
         }
         //删除流程实例
         ProcessEngines.getDefaultProcessEngine().getRuntimeService().deleteProcessInstance(processInstanceId, "用户作废");
