@@ -244,6 +244,22 @@ public class FlowService {
      * @throws APPErrorException
      */
     public String[] startFlow(String pBusinessKey, String pFlowid, String pUserID) throws APPErrorException {
+       return startFlow(pBusinessKey,pFlowid,pUserID,new HashMap<String, Object>());
+    }
+    /**
+     * 启动流程
+     * 启动流程时会同时增加一条业务数据
+     *
+     * @param pBusinessKey 业务主键
+     * @param pFlowid      流程ID
+     * @param pUserID      用户ID
+     * @param pSelectVariables 启动变量
+     *
+     * @return 返回业务主键
+     *
+     * @throws APPErrorException
+     */
+    public String[] startFlow(String pBusinessKey, String pFlowid, String pUserID, Map<String, Object> pSelectVariables) throws APPErrorException {
         if (StringUtil.isNullOrEmpty(pBusinessKey)) {
             throw new APPErrorException("无效的业务ID");
         }
@@ -256,7 +272,7 @@ public class FlowService {
             throw new APPErrorException("无法获取流程ID");
         }
         String id = pBusinessKey;
-        startFlowBykey(pFlowid, id);
+        startFlowBykey(pFlowid, id,pSelectVariables);
 
         Task task = getTasks(id).get(0);
         String taskid = task.getId();
@@ -266,7 +282,6 @@ public class FlowService {
 
         return new String[]{id, taskid};
     }
-
     /**
      * 删除流程实例
      * 删除一个正在处理的流程
@@ -380,8 +395,12 @@ public class FlowService {
         }
     }
     //======================自由流开始========================================================
-    private void turnTransition(String pTaskid, String pBusinessKey, String pUserID, String pActivityId,
-                                Map<String, Object> pVariables) throws APPErrorException {
+    public void turnTransition(String pTaskid, String pBusinessKey, String pUserID, String pActivityId,
+                               Map<String, Object> pVariables) throws APPErrorException {
+        turnTransition(pTaskid,pBusinessKey,pUserID,pActivityId,pVariables,false);
+    }
+    public void turnTransition(String pTaskid, String pBusinessKey, String pUserID, String pActivityId,
+                                Map<String, Object> pVariables,boolean pWriteEndDescription) throws APPErrorException {
         // 当前节点
         ActivityImpl currActivity = findActivitiImpl(pTaskid, null);
         // 清空当前流向
@@ -399,7 +418,7 @@ public class FlowService {
         TaskService taskService = ProcessEngines.getDefaultProcessEngine().getTaskService();
         // 执行转向任务
         claimTask(pTaskid, pUserID);
-        if ("END".equals(pActivityId.toUpperCase())) {
+        if (pWriteEndDescription && "END".equals(pActivityId.toUpperCase())) {
             Task task = getTask(pBusinessKey, pTaskid);
             task.setDescription("用户作废");
             ProcessEngines.getDefaultProcessEngine().getTaskService().saveTask(task);
@@ -872,7 +891,7 @@ public class FlowService {
                             processEngineConfiguration.getActivityFontName(),
                             processEngineConfiguration.getLabelFontName(),
                             processEngineConfiguration.getAnnotationFontName(),
-                            (ClassLoader) null, 1.0D
+                             null, 1.0D
                     );
             byte[] data = readBytes(imageStream);
             return data;
@@ -881,7 +900,71 @@ public class FlowService {
         }
 
     }
+    /**
+     * 获取高亮图片 指定节点
+     *
+     * @param pBusinessKey 业务主键
+     * @param pTaskDefIDs 指定高亮的任务节点
+     * @return 返回png图片字节流
+     *
+     * @throws APPErrorException
+     */
+    public byte[] getHighlightImg(String pBusinessKey, List<String> pTaskDefIDs) throws APPErrorException {
+        return getHighlightImg(pBusinessKey,pTaskDefIDs,Collections.<String>emptyList());
+    }
+    /**
+     * 获取高亮图片 指定节点
+     *
+     * @param pBusinessKey 业务主键
+     * @param pTaskDefIDs 指定高亮的任务节点
+     * @param pHighLightedFlows 指定高亮的任务节点
+     * @return 返回png图片字节流
+     *
+     * @throws APPErrorException
+     */
+    public byte[] getHighlightImg(String pBusinessKey, List<String> pTaskDefIDs,List<String> pHighLightedFlows) throws APPErrorException {
+        validStringParam("pBusinessKey", pBusinessKey);
+        if(pTaskDefIDs.size()<1)
+        {
+            throw new APPErrorException("无效的 pTaskDefIDs");
+        }
+        if(StringUtil.isNullOrEmpty(pTaskDefIDs.get(0)) )
+        {
+            throw new APPErrorException("无效的 pTaskDefIDs[0]");
+        }
 
+        HistoricTaskInstance task = getHistoricTask(pBusinessKey, pTaskDefIDs.get(0));
+        //Task task = getTask(pBusinessKey,pTaskDefID);
+        if (null == task) {
+            throw new APPErrorException("无效法获取任务信息");
+        }
+
+        ProcessEngineConfiguration processEngineConfiguration = ProcessEngines.getDefaultProcessEngine().getProcessEngineConfiguration();
+        String flowid = task.getProcessDefinitionId();
+
+
+        try {
+            RuntimeService runtimeService = ProcessEngines.getDefaultProcessEngine().getRuntimeService();
+
+            ProcessDiagramGenerator processDiagramGenerator = ProcessEngines.getDefaultProcessEngine().getProcessEngineConfiguration().getProcessDiagramGenerator();
+            InputStream imageStream =
+                    processDiagramGenerator.generateDiagram(
+                            ProcessEngines.getDefaultProcessEngine().getRepositoryService().getBpmnModel(flowid),
+                            "png",
+                            pTaskDefIDs,
+                            pHighLightedFlows,
+                            processEngineConfiguration.getActivityFontName(),
+                            processEngineConfiguration.getLabelFontName(),
+                            processEngineConfiguration.getAnnotationFontName(),
+                           null, 1.0D
+                    );
+            byte[] data = readBytes(imageStream);
+            return data;
+        } catch (Exception e) {
+            throw new APPErrorException("获取高亮图片错误", e);
+        }
+
+    }
     /**
      * 获取下一节点信息
      *
