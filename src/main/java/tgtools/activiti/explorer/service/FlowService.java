@@ -301,7 +301,6 @@ public class FlowService {
         }
         ProcessEngines.getDefaultProcessEngine().getRuntimeService().deleteProcessInstance(procssid, "用户：" + pUserID + "手动删除");
     }
-
     /**
      * 发送流程
      *
@@ -314,6 +313,20 @@ public class FlowService {
      * @throws APPErrorException
      */
     public void sendFlow(boolean pIsBack, String pBusinessKey, String pTaskid, String pUserID, Map<String, Object> pSelectVariables) throws APPErrorException {
+        sendFlow(pIsBack,pBusinessKey,pTaskid,pUserID,pSelectVariables,false);
+    }
+        /**
+         * 发送流程
+         *
+         * @param pIsBack          true:回退，false 向下扭转
+         * @param pBusinessKey     业务ID
+         * @param pTaskid          taskID
+         * @param pUserID          用户ID
+         * @param pSelectVariables 选中的节点 或 扭转的变量信息
+         * @param pLocalScope 是否使用局部变量，pSelectVariables 只在本次提交有效
+         * @throws APPErrorException
+         */
+    public void sendFlow(boolean pIsBack, String pBusinessKey, String pTaskid, String pUserID, Map<String, Object> pSelectVariables,boolean pLocalScope) throws APPErrorException {
         HistoricProcessInstance hpi = getHistoricProcessInstance(pBusinessKey);
         String pdi = hpi.getProcessDefinitionId();
         String procid = hpi.getId();
@@ -331,9 +344,9 @@ public class FlowService {
         task.setDescription(pIsBack ? "用户回退" : "用户发送");
         taskService.saveTask(task);
         if (!pIsBack) {
-            nextFlow(pTaskid, pUserID, vars);
+            nextFlow(pTaskid, pUserID, vars,pLocalScope);
         } else {
-            backFlow(pBusinessKey, pTaskid, pUserID, vars);
+            backFlow(pBusinessKey, pTaskid, pUserID, vars,pLocalScope);
         }
     }
 
@@ -560,6 +573,7 @@ public class FlowService {
     }
 
     //===========================自由流 end=========================================
+
     /**
      * 流程流转到下一节点
      *
@@ -568,16 +582,26 @@ public class FlowService {
      * @param pVariables
      */
     public void nextFlow(String pTaskid, String pUserID, Map<String, Object> pVariables) throws APPErrorException {
+        nextFlow(pTaskid,pUserID,pVariables,false);
+    }
+        /**
+         * 流程流转到下一节点
+         *
+         * @param pTaskid
+         * @param pUserID
+         * @param pVariables
+         * @param pLocalScope 是否使用局部变量，pSelectVariables 只在本次提交有效
+         */
+    public void nextFlow(String pTaskid, String pUserID, Map<String, Object> pVariables,boolean pLocalScope) throws APPErrorException {
         validStringParam("pTaskid", pTaskid);
         validStringParam("pUserID", pUserID);
 
 
         TaskService taskService = ProcessEngines.getDefaultProcessEngine().getTaskService();
         claimTask(pTaskid, pUserID);//签收
-        taskService.complete(pTaskid, pVariables);//流转
+        taskService.complete(pTaskid, pVariables,pLocalScope);//流转
 
     }
-
     /**
      * 回退流程
      * 如果回退的是第一个usertask 则将自动签收
@@ -589,6 +613,19 @@ public class FlowService {
      * @throws APPErrorException
      */
     public void backFlow(String pBusinessKey, String pTaskid, String pUserID, Map<String, Object> pVariables) throws APPErrorException {
+        backFlow(pBusinessKey,pTaskid,pUserID,pVariables,false);
+    }
+        /**
+         * 回退流程
+         * 如果回退的是第一个usertask 则将自动签收
+         *
+         * @param pTaskid
+         * @param pUserID
+         * @param pVariables
+         * @param pLocalScope 是否使用局部变量，pSelectVariables 只在本次提交有效
+         * @throws APPErrorException
+         */
+    public void backFlow(String pBusinessKey, String pTaskid, String pUserID, Map<String, Object> pVariables,boolean pLocalScope) throws APPErrorException {
         validStringParam("pBusinessKey", pBusinessKey);
         validStringParam("pTaskid", pTaskid);
         validStringParam("pUserID", pUserID);
@@ -599,7 +636,7 @@ public class FlowService {
 
         backProcessOtherTask(pTaskid, pBusinessKey);
 
-        nextFlow(pTaskid, pUserID, pVariables);
+        nextFlow(pTaskid, pUserID, pVariables,pLocalScope);
         Task task = getTaskWhenFirstUserTask(pBusinessKey);
         if (null != task) {
             List<HistoricTaskInstance> list = getHistoricTask(pBusinessKey);
