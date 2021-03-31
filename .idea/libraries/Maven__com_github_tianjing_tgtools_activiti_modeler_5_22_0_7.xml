@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.tianjing:tgtools.activiti.modeler:5.22.0.7">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../../Work/apache-maven-3.6.0/repo/com/github/tianjing/tgtools.activiti.modeler/5.22.0.7/tgtools.activiti.modeler-5.22.0.7.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$PROJECT_DIR$/../../../Work/apache-maven-3.6.0/repo/com/github/tianjing/tgtools.activiti.modeler/5.22.0.7/tgtools.activiti.modeler-5.22.0.7-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../../../Work/apache-maven-3.6.0/repo/com/github/tianjing/tgtools.activiti.modeler/5.22.0.7/tgtools.activiti.modeler-5.22.0.7-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
