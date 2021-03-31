@@ -9,7 +9,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
+import javax.activation.MimetypesFileTypeMap;
 /**
  * @author 田径
  * @Title
@@ -18,6 +18,8 @@ import java.io.OutputStream;
  */
 @RequestMapping("/activiti/explorer/manage")
 public class ResourceController {
+
+    protected MimetypesFileTypeMap mimetypesFileTypeMap =new MimetypesFileTypeMap();
 
     @RequestMapping(value = "/resource/**")
     public void get(HttpServletRequest pRequest, HttpServletResponse pResponse) {
@@ -29,6 +31,7 @@ public class ResourceController {
         }
         file ="tgtools/activiti/explorer/"+file;
         try {
+            pResponse.setContentType(mimetypesFileTypeMap.getContentType(file));
             copyAndClose(ReflectUtil.getResourceAsStream(file), pResponse.getOutputStream());
         } catch (Exception e) {
             e.printStackTrace();
