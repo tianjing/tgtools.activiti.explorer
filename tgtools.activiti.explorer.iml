@@ -80,7 +80,7 @@
     <orderEntry type="library" name="Maven: org.apache.ant:ant-launcher:1.7.0" level="project" />
     <orderEntry type="library" name="Maven: com.github.tianjing:tgtools.web:1.0.329" level="project" />
     <orderEntry type="library" name="Maven: org.apache.tomcat.embed:tomcat-embed-core:8.5.16" level="project" />
-    <orderEntry type="library" name="Maven: com.github.tianjing:tgtools.activiti.modeler:5.22.0.7" level="project" />
+    <orderEntry type="library" name="Maven: com.github.tianjing:tgtools.activiti.modeler:5.22.0.8" level="project" />
     <orderEntry type="library" name="Maven: org.activiti:activiti-json-converter:5.22.0" level="project" />
     <orderEntry type="library" name="Maven: math.geom2d:javaGeom:0.11.1" level="project" />
     <orderEntry type="library" name="Maven: org.apache.xmlgraphics:batik-parser:1.7" level="project" />
